@@ -4,7 +4,8 @@
              [xml :as cx]
              [zip :as cz]]
             [clojure.data.xml :as cdx]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.data.zip.xml :as cdz]
             [clojure.string :as str])
   (:import [de.jollyday HolidayCalendar HolidayManager]
            [java.time LocalDate]))
@@ -15,8 +16,86 @@
         (fn [^String n fmt]
           [(str/lower-case (.replace n \_ \-)) fmt]))))
 
+(defn parse-edn
+  "Parse an edn map given as input and returns a xml
+  structure.
+
+  The edn is expected to contains a configuration key and
+  an holidays key mapped to an array of holidays.
+
+  ;> (parse-edn
+      {:configuration {:hierarchy \"IT\"}
+       :holidays      [[:FixedWeekday {:weekday                  \"SATURDAY\"
+                                       :which                    \"FIRST\"
+                                       :month                    \"NOVEMBER\"
+                                       :descriptionPropertiesKey \"MY_CUSTOM_1\"}]
+                       [:FixedWeekday {:weekday                  \"SUNDAY\"
+                                       :which                    \"FIRST\"
+                                       :month                    \"NOVEMBER\"
+                                       :descriptionPropertiesKey \"MY_CUSTOM_2\"}]]})
+  => {:tag :configuration,
+  :attrs
+  {:hierarchy \"IT\", :xmlns:tns \"http://www.example.org/Holiday\"},
+   :xmlns:xsi \"http://www.w3.org/2001/XMLSchema-instance\",
+   :xsi:schemaLocation \"http://www.example.org/Holiday /Holiday.xsd\"
+  :content
+  ({:tag   :tns:Holidays,
+    :attrs {},
+    :content
+    ({:tag     :FixedWeekday,
+      :attrs
+      {:weekday                  \"SATURDAY\",
+       :which                    \"FIRST\",
+       :month                    \"NOVEMBER\",
+       :descriptionPropertiesKey \"MY_CUSTOM_1\"},
+      :content ()}
+     {:tag     :FixedWeekday,
+      :attrs
+      {:weekday                  \"SUNDAY\",
+       :which                    \"FIRST\",
+       :month                    \"NOVEMBER\",
+       :descriptionPropertiesKey \"MY_CUSTOM_2\"},
+      :content ()})})}"
+  [m]
+  (let [prefs         {:xmlns:tns          "http://www.example.org/Holiday"
+                       :xmlns:xsi          "http://www.w3.org/2001/XMLSchema-instance"
+                       :xsi:schemaLocation "http://www.example.org/Holiday /Holiday.xsd"}
+        ensure-prefix (fn [h] (update h 0 (fn [t] (let [n (str t)]
+                                                    (if (str/starts-with? n ":tns:")
+                                                      t
+                                                      (keyword (str "tns" n)))))))]
+    (cdx/sexp-as-element
+     [:tns:Configuration (merge (:configuration m) prefs)
+      (reduce #(conj %1 (ensure-prefix %2)) [:tns:Holidays] (:holidays m))])))
+
+(defn parse-xml
+  "Parse an xml string given as input and returns an edn
+  structure that can be manipulated as appropriate and
+  eventually turned back to xml format again."
+  [xml]
+  ;; poc to serialize the xml to edn
+  (let [parse*      #(vector (:tag %) (:attrs %))
+        is          (java.io.ByteArrayInputStream. (.getBytes xml))
+        z           (cz/xml-zip (cx/parse is))
+        hierarchy   (cdz/xml1-> z :tns:Configuration (cdz/attr :hierarchy))
+        description (cdz/xml1-> z :tns:Configuration (cdz/attr :description))
+        hs          (cdz/xml1-> z :tns:Configuration :tns:Holidays)
+        holiday-set (map parse* (-> hs first :content))]
+
+    {:configuration {:hierarchy   hierarchy
+                     :description description}
+     :holidays      holiday-set}))
+
 (defprotocol CreateManager
   (create-manager [input]))
+
+(defn manager
+  "Given a country calendar (e.g. :italy) as an argument returns an HolidayManager
+  that can be utilized to compute holidays for that country."
+  ([]
+   (HolidayManager/getInstance))
+  ([input]
+   (create-manager input)))
 
 (extend-protocol CreateManager
   String
@@ -42,14 +121,21 @@
                       (instance? HolidayCalendar calendar) calendar)]
       (when-not (instance? HolidayCalendar calendar')
         (throw (IllegalArgumentException. (str  calendar " was not a valid calendar"))))
-      (HolidayManager/getInstance calendar'))))
+      (HolidayManager/getInstance calendar')))
 
-(defn manager
-  "Given a country calendar (e.g. :italy) as an argument returns an HolidayManager
-  that can be utilized to compute holidays for that country."
+  clojure.data.xml.node.Element
+  (create-manager [n]
+    (create-manager (cdx/emit-str n)))
 
-  [input]
-  (create-manager input))
+  clojure.lang.PersistentArrayMap
+  (create-manager [m]
+    (let [xml (slurp
+               (io/resource
+                (str "holidays/Holidays_" (name (-> m :configuration :hierarchy)) ".xml")))
+          cal (parse-xml xml)
+          cal (update cal :holidays #(reduce (fn [hs h] (conj hs h)) % (-> m :holidays)))]
+
+      (create-manager (parse-edn cal)))))
 
 (defn- holiday->map
   ""
