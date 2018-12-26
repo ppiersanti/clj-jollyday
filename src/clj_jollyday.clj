@@ -51,7 +51,7 @@
   [input]
   (create-manager input))
 
-(defn holiday->map
+(defn- holiday->map
   ""
   [h]
   (hash-map
