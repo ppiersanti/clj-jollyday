@@ -56,8 +56,9 @@
   [h]
   (hash-map
    :date            (.getDate h)
-   :description     (.getDescription h)))
    :properties-key  (keyword (str/lower-case (.getPropertiesKey h)))
+   :description     (.getDescription h)
+   :official-holiday? (boolean (.getType h) )))
 
 (defn holidays
   ([hm year]

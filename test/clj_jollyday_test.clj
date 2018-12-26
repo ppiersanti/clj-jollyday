@@ -13,7 +13,8 @@
 (deftest holiday-test
   (let [hm (manager :italy)]
     (testing "easter is recognized"
-      (is (= {:description    "Easter",
-              :properties-key :christian.easter,
-              :date           (LocalDate/parse "2018-04-01")}
+      (is (= {:description       "Easter",
+              :properties-key    :christian.easter,
+              :date              (LocalDate/parse "2018-04-01")
+              :official-holiday? true}
              (holiday hm 2018 :christian.easter))))))
