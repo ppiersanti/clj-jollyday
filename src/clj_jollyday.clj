@@ -61,19 +61,19 @@
 
 (defn holidays
   ([hm year]
-   (.getHolidays hm
-                 year
-                 (make-array String 0)))
+   (map holiday->map (.getHolidays hm
+                                   year
+                                   (make-array String 0))))
   ([hm date-from date-to]
-   (.getHolidays hm
-                 date-from
-                 date-to
-                 (make-array String 0))))
+   (map holiday->map (.getHolidays hm
+                                   date-from
+                                   date-to
+                                   (make-array String 0)))))
 
 (defn holiday
   ""
   [^HolidayManager hm year properties-key]
-  (some #(and (= properties-key (:properties-key %)) %) (map holiday->map (holidays hm year))))
+  (some #(and (= properties-key (:properties-key %)) %) (holidays hm year)))
 
 (defn holiday?
   "Takes an HolidayManager and a date object and returns true
