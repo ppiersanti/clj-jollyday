@@ -1,11 +1,11 @@
 (ns clj-jollyday
   (:require [clj-jollyday.util :as util]
             [clojure
-             [string :as string]
              [xml :as cx]
              [zip :as cz]]
             [clojure.data.xml :as cdx]
             [clojure.java.io :as io])
+            [clojure.string :as str])
   (:import [de.jollyday HolidayCalendar HolidayManager]
            java.time.LocalDate))
 
@@ -14,7 +14,7 @@
   (->> (util/get-static-fields-of-type HolidayCalendar HolidayCalendar)
        (util/map-kv
         (fn [^String n fmt]
-          [(string/lower-case (.replace n \_ \-)) fmt]))))
+          [(str/lower-case (.replace n \_ \-)) fmt]))))
 
 (defprotocol CreateManager
   (create-manager [input]))
@@ -57,8 +57,8 @@
   [h]
   (hash-map
    :date            (.getDate h)
-   :properties-key  (keyword (string/lower-case (.getPropertiesKey h)))
    :description     (.getDescription h)))
+   :properties-key  (keyword (str/lower-case (.getPropertiesKey h)))
 
 (defn holidays
   ([hm year]
