@@ -7,8 +7,7 @@
             [clojure.java.io :as io])
             [clojure.string :as str])
   (:import [de.jollyday HolidayCalendar HolidayManager]
-           java.time.LocalDate))
-
+           [java.time LocalDate]))
 
 (def predefined-calendars
   (->> (util/get-static-fields-of-type HolidayCalendar HolidayCalendar)
