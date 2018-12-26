@@ -208,3 +208,11 @@
                         (.setConfigurationDataSource cds)
                         (.doInit))]
     (holidays man 2018)))
+;; *** TODO ***
+;; - make it works custom holiday's description
+;; - function parameter's hints
+;; - test calendars other than :it
+;; - convert holidays' output to edn
+;; - test subconfiguration
+;; - extend holiday by description string
+;; - create-manager PersistentArraymap -> generic map interface
