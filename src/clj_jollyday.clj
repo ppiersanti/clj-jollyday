@@ -127,7 +127,7 @@
   (create-manager [n]
     (create-manager (cdx/emit-str n)))
 
-  clojure.lang.PersistentArrayMap
+  clojure.lang.IPersistentMap
   (create-manager [m]
     (let [xml (slurp
                (io/resource
