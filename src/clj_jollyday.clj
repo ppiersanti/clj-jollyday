@@ -159,8 +159,10 @@
 
 (defn holiday
   ""
-  [^HolidayManager hm year properties-key]
-  (some #(and (= properties-key (:properties-key %)) %) (holidays hm year)))
+  [^HolidayManager hm year properties-key-or-descr]
+  (condp instance? properties-key-or-descr
+    clojure.lang.Keyword (some #(and (= properties-key-or-descr (:properties-key %)) %) (holidays hm year))
+    String               (some #(and (= properties-key-or-descr (:description %)) %) (holidays hm year))))
 
 (defn holiday?
   "Takes an HolidayManager and a date object and returns true
