@@ -65,26 +65,45 @@
                                                       t
                                                       (keyword (str "tns" n)))))))]
     (cdx/sexp-as-element
-     [:tns:Configuration (merge (:configuration m) prefs)
-      (reduce #(conj %1 (ensure-prefix %2)) [:tns:Holidays] (:holidays m))])))
+     [:tns:Configuration (merge (select-keys m [:hierarchy :description]) prefs)
+      (reduce #(conj %1 (ensure-prefix %2)) [:tns:Holidays] (:holidays m))
+      (when (seq (:subconfigurations m))
+        (map
+         #(vector
+           :tns:Subconfigurations
+           (select-keys %1 [:hierarchy :description])
+           (reduce (fn [xs x] (conj xs (ensure-prefix x)))
+                   [:tns:Holidays] (:holidays %1))) (:subconfigurations m)))])))
 
 (defn parse-xml
   "Parse an xml string given as input and returns an edn
   structure that can be manipulated as appropriate and
   eventually turned back to xml format again."
   [xml]
-  ;; poc to serialize the xml to edn
-  (let [parse*      #(vector (:tag %) (:attrs %))
-        is          (java.io.ByteArrayInputStream. (.getBytes xml))
-        z           (cz/xml-zip (cx/parse is))
-        hierarchy   (cdz/xml1-> z :tns:Configuration (cdz/attr :hierarchy))
-        description (cdz/xml1-> z :tns:Configuration (cdz/attr :description))
-        hs          (cdz/xml1-> z :tns:Configuration :tns:Holidays)
-        holiday-set (map parse* (-> hs first :content))]
+  (let [parse*     #(vector (:tag %) (:attrs %))
+        extract-fn (fn [n]
+                     (zipmap [:hierarchy :description :holidays]
+                             ((juxt #(cdz/attr % :hierarchy)
+                                    #(cdz/attr % :description)
+                                    #(map
+                                      parse*
+                                      (->
+                                       (cdz/xml1-> % :tns:Holidays)
+                                       first
+                                       :content))) n)))
+        z          (-> xml
+                       (.getBytes)
+                       (java.io.ByteArrayInputStream.)
+                       (cx/parse)
+                       (cz/xml-zip))
+        c          (extract-fn
+                    (cdz/xml1-> z :tns:Configuration))
+        subc       (map
+                    extract-fn
+                    (cdz/xml-> z :tns:Configuration :tns:SubConfigurations))]
 
-    {:configuration {:hierarchy   hierarchy
-                     :description description}
-     :holidays      holiday-set}))
+    (if (seq subc)
+      (assoc c :subconfigurations (reduce conj [] subc)) c)))
 
 (defprotocol CreateManager
   (create-manager [input]))
@@ -133,7 +152,7 @@
                (io/resource
                 (str "holidays/Holidays_" (name (-> m :configuration :hierarchy)) ".xml")))
           cal (parse-xml xml)
-          cal (update cal :holidays #(reduce (fn [hs h] (conj hs h)) % (-> m :holidays)))]
+          cal (update-in cal [:configuration :holidays] #(reduce (fn [hs h] (conj hs h)) % (-> m :holidays)))]
 
       (create-manager (parse-edn cal)))))
 
@@ -170,10 +189,6 @@
 
   [^HolidayManager hm ^LocalDate d]
   (.isHoliday hm d (into-array [""])))
-
-
-
-
 
 (comment
   ;; poc to create an holiday manager from a customized configuration stream
