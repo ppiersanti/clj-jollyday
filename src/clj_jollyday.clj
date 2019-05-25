@@ -236,12 +236,3 @@
   #_(-> (parse-xml (slurp (io/resource "test.xml"))) (cdx/sexp-as-element) #_(cdx/emit-str))
 ;; => "<?xml version=\"1.0\" encoding=\"UTF-8\"?><configuration xmlns:tns=\"http://www.example.org/Holiday\" hierarchy=\"it\" description=\"Italy\"><holidays><tns:Fixed descriptionPropertiesKey=\"ALL_SAINTS\" day=\"1\" month=\"NOVEMBER\"/><tns:Fixed descriptionPropertiesKey=\"IMMACULATE CONCEPTION\" day=\"8\" month=\"DECEMBER\"/></holidays></configuration>"
 )
-
-;; *** TODO ***
-;; - make it works custom holiday's description
-;; - function parameter's hints
-;; - test calendars other than :it
-;; - convert holidays' output to edn
-;; - test subconfiguration
-;; - extend holiday by description string
-;; - create-manager PersistentArraymap -> generic map interface
