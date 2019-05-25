@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [clojure.zip :as cz]
             [clojure.data.xml :as cdx]
-            [clojure.xml :as cx])
+            [clojure.xml :as cx]
+            [clojure.data.zip.xml :as zip-xml])
   (:import [java.time LocalDate]))
 
 (deftest holiday?-test
@@ -57,3 +58,21 @@
                           (.setConfigurationDataSource cds)
                           (.doInit))]
       (is (= 2 (count (holidays man 2018)))))))
+
+
+(deftest round-trip
+  (testing "round trip"
+    (let [root (-> (slurp (io/resource "test.xml"))
+                   (parse-xml)
+                   (parse-edn)
+                   cz/xml-zip)]
+      (are [exp n] (= exp (zip-xml/attr (zip-xml/xml1-> root :tns:Configuration) n))
+        "it"    :hierarchy
+        "Italy" :description)
+      (are [exp n] (= exp (zip-xml/attr (zip-xml/xml1->
+                                         root
+                                         :tns:Holidays
+                                         :tns:Fixed) n))
+        "ALL_SAINTS" :descriptionPropertiesKey
+        "1"          :day
+        "NOVEMBER"   :month))))
