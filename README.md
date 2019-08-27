@@ -1,11 +1,11 @@
 # clj-jollyday
 
 A Clojure wrapper around the [Jollyday](https://github.com/svendiedrichsen/jollyday "Jollyday") library
-plus some convenience functions.
+plus some useful functions.
 
 ## Rationale
-The main goal is to work with edn rather than xml data. Manipulating, adding, removing
-holydays in a Clojure flavor makes it easier the task at hand.
+The main goal is working with edn rather than xml data. Manipulating, adding, removing
+holidays in a Clojure flavour makes it easier.
 
 ## Installation
 Add the following dependency to your project.clj file:
@@ -17,13 +17,13 @@ Add the following dependency to your project.clj file:
 
 ## Usage
 
-To start using this library first require it:
+To use this library first require it:
 
 ```clojure
 (require '[clj-hollyday :as hol])
 ```
 
-Next set an holyday manager to query for holydays in a particular country:
+Next set an holiday manager to query for holidays in a particular country:
 
 ``` clojure
 (def man (hol/manager :italy))
@@ -70,8 +70,8 @@ To get an holidays collection in a given period of time:
 	 :official-holiday? true})
 ```
 
-Not all the holidays have fixed recurring. Some holiday's date might depend upon the year:
-Query an holyday by year and key:
+Some holiday's date might depend upon the year:
+query an holyday by year and key:
 
 ```clojure
 (hol/holiday man 2020 :christian.easter)
@@ -137,7 +137,7 @@ Data can be turned back to xml structure, ready to be manipulated with Clojure x
 Countries definition files can be parsed as well:
 
 ```clojure
-(hol/parse (slurp (io/resource "holidays/Holidays_it.xml")))
+(hol/parse-xml (slurp (io/resource "holidays/Holidays_it.xml")))
 => {:hierarchy "it",
 	:description "Italy",
 	:holidays
