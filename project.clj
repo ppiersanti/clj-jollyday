@@ -7,6 +7,7 @@
                  [de.jollyday/jollyday "0.5.2"]
                  [org.clojure/data.xml "0.2.0-alpha5"]
                  [org.clojure/data.zip "0.1.2"]]
+  :deploy-repositories [["releases" :clojars]]
   :profiles {:test {:resource-paths ["test-resources"]}})
 
 
