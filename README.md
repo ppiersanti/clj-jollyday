@@ -1,5 +1,7 @@
 # clj-jollyday
 
+[![Clojars Project](https://img.shields.io/clojars/v/clj-jollyday.svg)](https://clojars.org/clj-jollyday)
+
 A Clojure wrapper around the [Jollyday](https://github.com/svendiedrichsen/jollyday "Jollyday") library
 plus some useful functions.
 
