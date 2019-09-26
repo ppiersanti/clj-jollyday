@@ -1,6 +1,6 @@
-(defproject clj-jollyday "0.1.1-SNAPSHOT"
+(defproject clj-jollyday "0.1.1-alpha1"
   :description "Jollyday Clojure wrapper"
-  :url "https://github.com/slowcod/clj-jollyday"
+  :url "https://github.com/ppiersanti/clj-jollyday"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
